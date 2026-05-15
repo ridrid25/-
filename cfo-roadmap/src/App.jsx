@@ -329,7 +329,7 @@ export default function App() {
       return 0;
     });
 
-  const totalDone = Object.values(done).filter(Boolean).length;
+  const totalDone = IMPROVEMENTS.filter(i => done[i.id]).length;
   const totalAll  = IMPROVEMENTS.length;
 
   const effortOrder = ["XS","S","M","L"];
@@ -489,7 +489,7 @@ export default function App() {
                   {impact === 10 ? "🔥" : impact >= 8 ? "⭐" : "·"} {impact}
                 </div>
                 {effortOrder.map(effort => {
-                  const items = IMPROVEMENTS.filter(i => i.impact === impact && i.effort === effort);
+                  const items = filtered.filter(i => i.impact === impact && i.effort === effort);
                   return (
                     <div key={`${impact}-${effort}`} style={{
                       minHeight: 60, background: "#0E0E14",
