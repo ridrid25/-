@@ -144,8 +144,8 @@ export default function App() {
               {isAdmin ? <Check className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
               {isAdmin ? 'Админ' : 'Вход'}
             </button>
-            <button onClick={() => setDark((d) => !d)} className="btn-tactile flex h-11 w-11 items-center justify-center rounded-lg border border-white/25 bg-white/10 text-brand-ink hover:bg-white/20" title="Светлая / тёмная тема">
-              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            <button onClick={() => setDark((d) => !d)} className="btn-tactile flex h-11 w-11 items-center justify-center rounded-lg border border-white/25 bg-white/10 text-brand-ink hover:bg-white/20" title="Светлая / тёмная тема" aria-label={dark ? 'Включить светлую тему' : 'Включить тёмную тему'} aria-pressed={dark}>
+              {dark ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
             </button>
             <button onClick={() => setRefKey(null)} className="btn-tactile flex min-h-[44px] items-center gap-1.5 whitespace-nowrap rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-[11px] font-semibold text-brand-ink hover:bg-white/20">
               <ClipboardList className="h-3.5 w-3.5" /> Рецептуры
@@ -237,7 +237,7 @@ export default function App() {
 
       {/* Модалка подтверждения */}
       {confirm && (
-        <Modal onClose={() => setConfirm(null)}>
+        <Modal onClose={() => setConfirm(null)} label={confirm.title}>
           <h3 className="mb-1.5 font-display text-[15px] font-semibold tracking-tight">{confirm.title}</h3>
           <p className="mb-3.5 text-[12.5px] text-muted">{confirm.text}</p>
           <div className="grid grid-cols-2 gap-2.5">
@@ -249,7 +249,7 @@ export default function App() {
 
       {/* Тост */}
       {toast && (
-        <div className="fixed inset-x-3 bottom-3.5 z-[60] flex animate-toast-up items-center justify-between gap-3 rounded-xl bg-accent px-3.5 py-3 text-sm text-accent-ink shadow-lift sm:left-auto sm:right-5 sm:w-96">
+        <div role="status" aria-live="polite" className="fixed inset-x-3 bottom-3.5 z-[60] flex animate-toast-up items-center justify-between gap-3 rounded-xl bg-accent px-3.5 py-3 text-sm text-accent-ink shadow-lift sm:left-auto sm:right-5 sm:w-96">
           <span>{toast.text}</span>
           {toast.undo && (
             <button onClick={() => { toast.undo!(); setToast(null); }} className="btn-tactile flex-none rounded-lg border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold">Вернуть</button>
@@ -267,7 +267,7 @@ export default function App() {
 function SectionLabel({ num, title, hint, right }: { num: string; title: string; hint?: string; right?: React.ReactNode }) {
   return (
     <div className="mb-2.5 mt-5 flex items-center font-display text-xs font-semibold uppercase tracking-wider first:mt-0.5">
-      <span className="mr-2.5 inline-flex h-5 w-5 items-center justify-center rounded bg-brand text-[11px] text-brand-ink">{num}</span>
+      <span aria-hidden="true" className="mr-2.5 inline-flex h-5 w-5 items-center justify-center rounded bg-brand text-[11px] text-brand-ink">{num}</span>
       {title}
       {hint && <span className="ml-auto font-sans text-[11px] font-normal normal-case tracking-normal text-muted">{hint}</span>}
       {right && <span className="ml-auto">{right}</span>}
@@ -279,9 +279,9 @@ function Collapsible({ title, children, defaultOpen = false }: { title: string; 
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="mb-2.5 overflow-hidden rounded-xl border border-line bg-surface shadow-card">
-      <button onClick={() => setOpen((o) => !o)} className="tap flex min-h-[44px] w-full items-center justify-between bg-surface-2 px-3.5 py-3 text-left font-display text-xs font-semibold uppercase tracking-wide text-ink hover:bg-line/40">
+      <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="tap flex min-h-[44px] w-full items-center justify-between bg-surface-2 px-3.5 py-3 text-left font-display text-xs font-semibold uppercase tracking-wide text-ink hover:bg-line/40">
         <span>{title}</span>
-        <ChevronDown className={`tap h-3.5 w-3.5 text-muted ${open ? '' : '-rotate-90'}`} />
+        <ChevronDown aria-hidden="true" className={`tap h-3.5 w-3.5 text-muted ${open ? '' : '-rotate-90'}`} />
       </button>
       <div className={`reveal ${open ? 'open' : ''}`}>
         <div className="reveal-inner">
@@ -397,7 +397,7 @@ function ProdSection({ settings, setSettings, isAdmin }: { settings: GlobalSetti
             <div className="mb-1.5 flex items-center justify-between">
               <input value={p.name} readOnly={!isAdmin} onChange={(e) => update(p.id, { name: e.target.value })}
                 className="tap w-3/5 border-b border-dashed border-transparent bg-transparent text-xs text-muted outline-none focus:border-accent/50" />
-              {isAdmin && <button onClick={() => remove(p.id)} className="btn-tactile flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-surface text-zone-red hover:border-zone-red/50"><X className="h-3.5 w-3.5" /></button>}
+              {isAdmin && <button onClick={() => remove(p.id)} aria-label={`Удалить расход «${p.name}»`} className="btn-tactile flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-surface text-zone-red hover:border-zone-red/50"><X className="h-3.5 w-3.5" aria-hidden="true" /></button>}
             </div>
             <div className="relative flex items-center">
               <NumberInput value={p.val} readOnly={!isAdmin} onChange={(v) => update(p.id, { val: v })}
@@ -439,15 +439,15 @@ function EngineSheet({ card, settings, isAdmin, onDisc, onMatPrice, onSave, onCl
 
   return (
     <>
-      <div className="fixed inset-0 z-40 animate-fade-in bg-petrol/50 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="fixed inset-x-0 bottom-0 z-50 flex max-h-[78vh] animate-sheet-up flex-col rounded-t-2xl border-t border-line bg-surface text-ink shadow-sheet sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[480px] sm:rounded-2xl">
-        <div className="mx-auto mt-2 h-1 w-10 flex-none rounded bg-line" />
+      <div className="fixed inset-0 z-40 animate-fade-in bg-petrol/50 backdrop-blur-[2px]" onClick={onClose} aria-hidden="true" />
+      <div role="dialog" aria-modal="true" aria-label={`Движок марки «${card.name}»`} className="fixed inset-x-0 bottom-0 z-50 flex max-h-[78vh] animate-sheet-up flex-col rounded-t-2xl border-t border-line bg-surface text-ink shadow-sheet sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[480px] sm:rounded-2xl">
+        <div aria-hidden="true" className="mx-auto mt-2 h-1 w-10 flex-none rounded bg-line" />
         <div className="flex flex-none items-start justify-between gap-2.5 border-b border-line px-4 pb-3 pt-2.5">
           <div>
             <div className="font-display text-[15px] font-semibold tracking-tight">{card.name}</div>
             <div className="mt-0.5 text-[11px] text-muted">{ref ? `${ref.gost} · ${ref.bitum}` : 'без рецептуры'}</div>
           </div>
-          <button onClick={onClose} className="btn-tactile flex h-9 w-9 flex-none items-center justify-center rounded-lg border border-line bg-surface-2"><X className="h-4.5 w-4.5" /></button>
+          <button onClick={onClose} aria-label="Закрыть движок" className="btn-tactile flex h-9 w-9 flex-none items-center justify-center rounded-lg border border-line bg-surface-2"><X className="h-4.5 w-4.5" aria-hidden="true" /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 pb-6 pt-3.5">
@@ -545,10 +545,10 @@ function RefDrawer({ initial, onClose }: { initial: string | null; onClose: () =
   const [open, setOpen] = useState<string | null>(initial);
   return (
     <div className="fixed inset-0 z-[55] animate-fade-in bg-petrol/55 backdrop-blur-[2px]" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="absolute inset-0 flex flex-col bg-bg sm:left-auto sm:w-[560px] sm:border-l sm:border-line sm:shadow-sheet">
+      <div role="dialog" aria-modal="true" aria-label="Справочник рецептур" className="absolute inset-0 flex flex-col bg-bg sm:left-auto sm:w-[560px] sm:border-l sm:border-line sm:shadow-sheet">
         <div className="header-mesh flex flex-none items-center justify-between bg-brand px-4 py-4 text-brand-ink">
           <h2 className="font-display text-sm font-semibold uppercase tracking-[0.06em]">Справочник рецептур</h2>
-          <button onClick={onClose} className="btn-tactile flex h-9 w-9 items-center justify-center rounded-lg border border-white/25 bg-white/10"><X className="h-4.5 w-4.5" /></button>
+          <button onClick={onClose} aria-label="Закрыть справочник" className="btn-tactile flex h-9 w-9 items-center justify-center rounded-lg border border-white/25 bg-white/10"><X className="h-4.5 w-4.5" aria-hidden="true" /></button>
         </div>
         <div className="flex-1 overflow-y-auto p-3 pb-10">
           {BASE_ORDER.map((key) => {
@@ -557,7 +557,7 @@ function RefDrawer({ initial, onClose }: { initial: string | null; onClose: () =
             const isOpen = open === key;
             return (
               <div key={key} className={`tap mb-2.5 overflow-hidden rounded-xl border bg-surface shadow-card ${isOpen ? 'border-accent' : 'border-line'}`}>
-                <button onClick={() => setOpen(isOpen ? null : key)} className="tap flex w-full items-center gap-2.5 px-3.5 py-3 text-left hover:bg-surface-2">
+                <button onClick={() => setOpen(isOpen ? null : key)} aria-expanded={isOpen} className="tap flex w-full items-center gap-2.5 px-3.5 py-3 text-left hover:bg-surface-2">
                   <span className="flex-1">
                     <span className="font-display text-sm font-semibold tracking-tight text-ink">{d.name}</span>
                     <span className="mt-1.5 flex flex-wrap gap-1">
@@ -566,7 +566,7 @@ function RefDrawer({ initial, onClose }: { initial: string | null; onClose: () =
                       {d.density !== '—' && <Badge>ρ {d.density}</Badge>}
                     </span>
                   </span>
-                  <ChevronDown className={`tap h-3.5 w-3.5 flex-none text-muted ${isOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown aria-hidden="true" className={`tap h-3.5 w-3.5 flex-none text-muted ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
                 <div className={`reveal ${isOpen ? 'open' : ''}`}>
                   <div className="reveal-inner">
@@ -616,10 +616,10 @@ function Badge({ children, dark }: { children: React.ReactNode; dark?: boolean }
 }
 
 // ----- Модалки -----
-function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+function Modal({ children, onClose, label }: { children: React.ReactNode; onClose: () => void; label?: string }) {
   return (
     <div className="fixed inset-0 z-[60] flex animate-fade-in items-center justify-center bg-petrol/55 p-5 backdrop-blur-[2px]" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-full max-w-sm animate-rise-in rounded-2xl border border-line bg-surface p-5 shadow-lift">{children}</div>
+      <div role="dialog" aria-modal="true" aria-label={label} className="w-full max-w-sm animate-rise-in rounded-2xl border border-line bg-surface p-5 shadow-lift">{children}</div>
     </div>
   );
 }
@@ -629,7 +629,7 @@ function PinModal({ onOk, onClose }: { onOk: (v: string) => boolean; onClose: ()
   const [err, setErr] = useState('');
   const submit = () => { if (!onOk(v)) setErr('Неверный PIN'); };
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} label="Вход администратора">
       <h3 className="mb-1.5 font-display text-[15px] font-semibold tracking-tight">Вход администратора</h3>
       <p className="mb-3.5 text-[12.5px] text-muted">Введите PIN, чтобы менять закупочные цены и сохранять данные. Это простая защита от случайных правок — не используйте важные пароли.</p>
       <input

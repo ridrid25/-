@@ -73,15 +73,17 @@ export default function HistoryTable({ journal, target, onTelegram, onDelete, on
                         onClick={() => onTelegram(e)}
                         className="btn-tactile btn-cta flex h-9 w-9 items-center justify-center rounded-lg bg-[#229ED9] text-white"
                         title="Счёт бухгалтеру в Telegram"
+                        aria-label={`Счёт по марке «${e.name}» бухгалтеру в Telegram`}
                       >
-                        <Send className="h-4 w-4" />
+                        <Send className="h-4 w-4" aria-hidden="true" />
                       </button>
                       <button
                         onClick={() => onDelete(e.id)}
                         className="btn-tactile flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-surface-2 text-zone-red hover:border-zone-red/50"
                         title="Удалить запись"
+                        aria-label={`Удалить запись «${e.name}» из журнала`}
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </div>
                   </td>

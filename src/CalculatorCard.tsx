@@ -104,9 +104,10 @@ export default function CalculatorCard({
       {/* Сводка — тап сворачивает/разворачивает */}
       <button
         onClick={onToggle}
+        aria-expanded={!card.collapsed}
         className="tap flex w-full items-center gap-2.5 px-3.5 py-3 text-left min-h-[44px] hover:bg-surface-2"
       >
-        <span className={`h-2.5 w-2.5 flex-none rounded-full ${zoneDot[r.zone]} ${r.zone === 'red' ? 'animate-breathe' : ''}`} />
+        <span aria-hidden="true" className={`h-2.5 w-2.5 flex-none rounded-full ${zoneDot[r.zone]} ${r.zone === 'red' ? 'animate-breathe' : ''}`} />
         <span className="min-w-0 flex-1 truncate font-display text-sm font-semibold tracking-tight text-ink">{card.name}</span>
         <span className="whitespace-nowrap font-mono text-xs text-muted">
           <Flash value={Math.round(r.priceGross)}>{fmtNum(r.priceGross)} ₽/т</Flash> ·{' '}
@@ -138,8 +139,9 @@ export default function CalculatorCard({
                 onClick={onDelete}
                 className="btn-tactile flex h-9 w-9 flex-none items-center justify-center rounded-lg border border-line bg-surface text-muted hover:border-zone-red/50 hover:text-zone-red"
                 title="Убрать марку"
+                aria-label="Убрать марку"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
 
