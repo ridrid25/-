@@ -16,6 +16,9 @@ export default {
         muted: 'rgb(var(--muted) / <alpha-value>)',
         accent: 'rgb(var(--accent) / <alpha-value>)',
         'accent-ink': 'rgb(var(--accent-ink) / <alpha-value>)',
+        // Бренд-хром: петроль в обеих темах (шапка и т.п.)
+        brand: 'rgb(var(--brand) / <alpha-value>)',
+        'brand-ink': 'rgb(var(--brand-ink) / <alpha-value>)',
         // Медный хайлайт — цены со скидкой, маркер торга, важные акценты
         copper: 'rgb(194 112 61 / <alpha-value>)',
         petrol: 'rgb(15 61 62 / <alpha-value>)',

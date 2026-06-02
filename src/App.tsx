@@ -129,25 +129,25 @@ export default function App() {
     <div className="min-h-screen bg-bg px-3 pb-16 pt-3.5 font-sans text-ink sm:px-5 sm:pt-6">
       <div className="mx-auto max-w-2xl">
         {/* Шапка */}
-        <header className="header-mesh mb-3.5 flex items-center justify-between gap-2.5 overflow-hidden rounded-xl bg-accent px-3.5 py-3 text-accent-ink shadow-lift">
+        <header className="header-mesh mb-3.5 flex items-center justify-between gap-2.5 overflow-hidden rounded-xl bg-brand px-3.5 py-3 text-brand-ink shadow-lift">
           <div>
             <h1 className="font-display text-[16px] font-bold uppercase tracking-[0.06em]">Калькулятор АБС</h1>
-            <p className="mt-0.5 text-[11px] tracking-wide text-accent-ink/70">Себестоимость · маржа · скидка · В3</p>
+            <p className="mt-0.5 text-[11px] tracking-wide text-brand-ink/70">Себестоимость · маржа · скидка · В3</p>
           </div>
           <div className="flex flex-none items-center gap-2">
             <button
               onClick={onRoleClick}
               className={`btn-tactile flex min-h-[44px] items-center gap-1.5 rounded-full border px-3 py-2 text-[10px] font-bold uppercase tracking-wide ${
-                isAdmin ? 'border-white/50 bg-white/25 text-accent-ink' : 'border-white/25 bg-white/10 text-accent-ink hover:bg-white/20'}`}
+                isAdmin ? 'border-copper/70 bg-copper/30 text-brand-ink' : 'border-white/25 bg-white/10 text-brand-ink hover:bg-white/20'}`}
               title={isAdmin ? 'Нажмите, чтобы выйти' : 'Вход администратора (изменение цен)'}
             >
               {isAdmin ? <Check className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
               {isAdmin ? 'Админ' : 'Вход'}
             </button>
-            <button onClick={() => setDark((d) => !d)} className="btn-tactile flex h-11 w-11 items-center justify-center rounded-lg border border-white/25 bg-white/10 text-accent-ink hover:bg-white/20" title="Светлая / тёмная тема">
+            <button onClick={() => setDark((d) => !d)} className="btn-tactile flex h-11 w-11 items-center justify-center rounded-lg border border-white/25 bg-white/10 text-brand-ink hover:bg-white/20" title="Светлая / тёмная тема">
               {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <button onClick={() => setRefKey(null)} className="btn-tactile flex min-h-[44px] items-center gap-1.5 whitespace-nowrap rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-[11px] font-semibold text-accent-ink hover:bg-white/20">
+            <button onClick={() => setRefKey(null)} className="btn-tactile flex min-h-[44px] items-center gap-1.5 whitespace-nowrap rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-[11px] font-semibold text-brand-ink hover:bg-white/20">
               <ClipboardList className="h-3.5 w-3.5" /> Рецептуры
             </button>
           </div>
@@ -267,7 +267,7 @@ export default function App() {
 function SectionLabel({ num, title, hint, right }: { num: string; title: string; hint?: string; right?: React.ReactNode }) {
   return (
     <div className="mb-2.5 mt-5 flex items-center font-display text-xs font-semibold uppercase tracking-wider first:mt-0.5">
-      <span className="mr-2.5 inline-flex h-5 w-5 items-center justify-center rounded bg-accent text-[11px] text-accent-ink">{num}</span>
+      <span className="mr-2.5 inline-flex h-5 w-5 items-center justify-center rounded bg-brand text-[11px] text-brand-ink">{num}</span>
       {title}
       {hint && <span className="ml-auto font-sans text-[11px] font-normal normal-case tracking-normal text-muted">{hint}</span>}
       {right && <span className="ml-auto">{right}</span>}
@@ -546,7 +546,7 @@ function RefDrawer({ initial, onClose }: { initial: string | null; onClose: () =
   return (
     <div className="fixed inset-0 z-[55] animate-fade-in bg-petrol/55 backdrop-blur-[2px]" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="absolute inset-0 flex flex-col bg-bg sm:left-auto sm:w-[560px] sm:border-l sm:border-line sm:shadow-sheet">
-        <div className="header-mesh flex flex-none items-center justify-between bg-accent px-4 py-4 text-accent-ink">
+        <div className="header-mesh flex flex-none items-center justify-between bg-brand px-4 py-4 text-brand-ink">
           <h2 className="font-display text-sm font-semibold uppercase tracking-[0.06em]">Справочник рецептур</h2>
           <button onClick={onClose} className="btn-tactile flex h-9 w-9 items-center justify-center rounded-lg border border-white/25 bg-white/10"><X className="h-4.5 w-4.5" /></button>
         </div>
