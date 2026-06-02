@@ -1,0 +1,178 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   Палитра «Нефть-зелёный» (Petrol) — единый источник цвета.
+   Меняется автоматически между светлой и тёмной (.dark) темой.
+   ========================================================================== */
+/* Цвета хранятся как «R G B» триплеты — чтобы Tailwind мог накладывать
+   прозрачность через модификаторы (bg-accent/40, border-line/60 и т.д.). */
+:root {
+  --bg: 240 243 242;       /* #F0F3F2 — фон страницы */
+  --surface: 255 255 255;  /* #FFFFFF — карточки / панели */
+  --surface-2: 244 247 246;/* вложенные поверхности, шапки секций */
+  --line: 211 218 216;     /* #D3DAD8 — границы / линии */
+  --ink: 15 61 62;         /* #0F3D3E — основной текст (тёмный сине-зелёный) */
+  --muted: 94 115 112;     /* #5E7370 — второстепенный текст */
+  --accent: 15 61 62;      /* #0F3D3E — акцент: шапка, активные элементы */
+  --accent-ink: 255 255 255;
+
+  /* Смысловые цвета зон маржи */
+  --zone-green: 47 158 99;   /* #2F9E63 */
+  --zone-yellow: 224 169 58; /* #E0A93A */
+  --zone-red: 207 75 75;     /* #CF4B4B */
+
+  --flash-color: rgba(194, 112, 61, 0.22);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: 10 24 23;          /* #0A1817 */
+  --surface: 17 48 47;     /* #11302F */
+  --surface-2: 15 42 41;
+  --line: 35 66 64;        /* #234240 */
+  --ink: 226 238 236;      /* #E2EEEC */
+  --muted: 143 170 166;    /* #8FAAA6 */
+  --accent: 194 112 61;    /* #C2703D — в тёмной теме акцент медь */
+  --accent-ink: 255 255 255;
+
+  /* чуть высветленные зоны для контраста на тёмном */
+  --zone-green: 61 190 122;  /* #3DBE7A */
+  --zone-yellow: 236 192 90; /* #ECC05A */
+  --zone-red: 224 107 107;   /* #E06B6B */
+
+  --flash-color: rgba(194, 112, 61, 0.28);
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: rgb(var(--bg));
+    color: rgb(var(--ink));
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Все денежные значения, проценты, объёмы — табличные цифры */
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  /* Доступность с клавиатуры: аккуратное кольцо в цвет акцента */
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+@layer components {
+  /* Плавность для всех интерактивных элементов */
+  .tap {
+    transition-property: transform, box-shadow, background-color, border-color, color, opacity;
+    transition-duration: 180ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Тактильная кнопка: поднятие на hover, вдавливание на active */
+  .btn-tactile {
+    transition-property: transform, box-shadow, background-color, border-color, color, filter;
+    transition-duration: 180ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn-tactile:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.03);
+  }
+  .btn-tactile:active {
+    transform: translateY(1px) scale(0.99);
+    filter: brightness(0.99);
+  }
+
+  /* Главные CTA — мягкое медное свечение при наведении */
+  .btn-cta:hover {
+    box-shadow: 0 4px 14px -4px rgba(194, 112, 61, 0.55), 0 0 0 1px rgba(194, 112, 61, 0.18);
+  }
+}
+
+/* ----- Ползунки (скидка и цены сырья) ----- */
+.range-petrol {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 9999px;
+  background: rgb(var(--line));
+  outline: none;
+  transition: background-color 180ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.range-petrol::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  background: var(--copper, #c2703d);
+  border: 3px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.range-petrol::-webkit-slider-thumb:hover {
+  transform: scale(1.08);
+}
+.range-petrol:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 6px rgba(194, 112, 61, 0.25);
+}
+.range-petrol::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: #c2703d;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+.range-petrol:active::-moz-range-thumb {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 6px rgba(194, 112, 61, 0.25);
+}
+
+/* Текстура / градиентный меш для шапки (очень деликатно) */
+.header-mesh {
+  background-image:
+    radial-gradient(120% 140% at 0% 0%, rgba(194, 112, 61, 0.28) 0%, rgba(194, 112, 61, 0) 45%),
+    radial-gradient(120% 140% at 100% 100%, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0) 50%);
+}
+
+/* Анимированное раскрытие карточек/секций через grid-rows */
+.reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 240ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.reveal.open {
+  grid-template-rows: 1fr;
+}
+.reveal > .reveal-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Уважение к prefers-reduced-motion — отключаем все анимации/переходы */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
