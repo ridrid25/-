@@ -16,6 +16,7 @@ import {
 import CalculatorCard from './CalculatorCard';
 import HistoryTable from './HistoryTable';
 import Flash from './Flash';
+import NumberInput from './NumberInput';
 
 type Role = 'mgr' | 'admin';
 
@@ -296,11 +297,10 @@ function Field({ label, unit, value, onChange, readOnly }: { label: string; unit
     <label className="flex flex-col">
       <span className="mb-1.5 text-xs text-muted">{label}</span>
       <div className="relative flex items-center">
-        <input
-          type="number" inputMode="decimal"
-          value={Number.isFinite(value) ? value : ''}
+        <NumberInput
+          value={value}
           readOnly={readOnly}
-          onChange={(e) => onChange?.(parseFloat(e.target.value.replace(',', '.')) || 0)}
+          onChange={(v) => onChange?.(v)}
           className={`tap w-full rounded-lg border py-2.5 pl-3 pr-10 font-mono text-base outline-none ${readOnly ? 'cursor-not-allowed border-line bg-surface-2 text-muted' : 'border-line bg-surface text-ink focus:border-accent focus:ring-2 focus:ring-accent/15'}`}
         />
         <span className="pointer-events-none absolute right-3 font-mono text-xs text-muted">{unit}</span>
@@ -400,7 +400,7 @@ function ProdSection({ settings, setSettings, isAdmin }: { settings: GlobalSetti
               {isAdmin && <button onClick={() => remove(p.id)} className="btn-tactile flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-surface text-zone-red hover:border-zone-red/50"><X className="h-3.5 w-3.5" /></button>}
             </div>
             <div className="relative flex items-center">
-              <input type="number" inputMode="decimal" value={p.val} readOnly={!isAdmin} onChange={(e) => update(p.id, { val: parseFloat(e.target.value.replace(',', '.')) || 0 })}
+              <NumberInput value={p.val} readOnly={!isAdmin} onChange={(v) => update(p.id, { val: v })}
                 className={`tap w-full rounded-lg border py-2.5 pl-3 pr-10 font-mono text-base outline-none ${isAdmin ? 'border-line bg-surface text-ink focus:border-accent focus:ring-2 focus:ring-accent/15' : 'cursor-not-allowed border-line bg-surface-2 text-muted'}`} />
               <span className="pointer-events-none absolute right-3 font-mono text-xs text-muted">₽/т</span>
             </div>
@@ -489,8 +489,8 @@ function EngineSheet({ card, settings, isAdmin, onDisc, onMatPrice, onSave, onCl
           <div className="mt-3.5">
             <div className="mb-2 flex items-center justify-between gap-2.5 text-[12.5px]">
               <span className="text-ink">Скидка, %</span>
-              <input type="number" inputMode="decimal" step="0.5" value={card.disc}
-                onChange={(e) => onDisc(parseFloat(e.target.value.replace(',', '.')) || 0)}
+              <NumberInput value={card.disc}
+                onChange={onDisc}
                 className="tap w-20 rounded-lg border border-line bg-surface-2 px-2 py-1.5 text-right font-mono text-sm text-ink outline-none focus:border-copper" />
             </div>
             <input type="range" min={-15} max={60} step={0.5} value={card.disc}
@@ -510,8 +510,8 @@ function EngineSheet({ card, settings, isAdmin, onDisc, onMatPrice, onSave, onCl
                   <div key={key} className="mb-4">
                     <div className="mb-2 flex items-center justify-between gap-2.5 text-[12.5px]">
                       <span className="text-ink">{m.name}</span>
-                      <input type="number" inputMode="decimal" step={m.step} value={settings.matPrices[key]}
-                        onChange={(e) => onMatPrice(key, parseFloat(e.target.value.replace(',', '.')) || 0)}
+                      <NumberInput value={settings.matPrices[key]}
+                        onChange={(v) => onMatPrice(key, v)}
                         className="tap w-24 rounded-lg border border-line bg-surface-2 px-2 py-1.5 text-right font-mono text-sm text-ink outline-none focus:border-copper" />
                     </div>
                     <input type="range" min={m.min} max={m.max} step={m.step} value={settings.matPrices[key]}

@@ -7,6 +7,7 @@ import {
   CardInput, CalcResult, GlobalSettings, RECIPES, fmtRub, fmtNum, Zone,
 } from './CalculatorEngine';
 import Flash from './Flash';
+import NumberInput from './NumberInput';
 
 interface Props {
   card: CardInput;
@@ -41,12 +42,9 @@ function NumField({
     <label className="flex flex-col">
       <span className="mb-1.5 text-xs text-muted">{label}</span>
       <div className="relative flex items-center">
-        <input
-          type="number"
-          inputMode="decimal"
-          step="any"
-          value={Number.isFinite(value) ? value : ''}
-          onChange={(e) => onChange(parseFloat(e.target.value.replace(',', '.')) || 0)}
+        <NumberInput
+          value={value}
+          onChange={onChange}
           className="tap w-full rounded-lg border border-line bg-surface py-2.5 pl-3 pr-10 font-mono text-base text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
         />
         <span className="pointer-events-none absolute right-3 font-mono text-xs text-muted">{unit}</span>
