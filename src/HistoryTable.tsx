@@ -106,7 +106,7 @@ function Th({ children, sticky }: { children: React.ReactNode; sticky?: boolean 
   return (
     <th
       className={[
-        'whitespace-nowrap bg-accent px-3 py-2.5 font-display text-[10.5px] font-semibold uppercase tracking-wide text-accent-ink',
+        'whitespace-nowrap bg-brand px-3 py-2.5 font-display text-[10.5px] font-semibold uppercase tracking-wide text-brand-ink',
         sticky ? 'sticky left-0 z-[2] text-left' : 'text-right',
       ].join(' ')}
     >
