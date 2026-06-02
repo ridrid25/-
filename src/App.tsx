@@ -237,7 +237,7 @@ export default function App() {
 
       {/* Модалка подтверждения */}
       {confirm && (
-        <Modal onClose={() => setConfirm(null)}>
+        <Modal onClose={() => setConfirm(null)} label={confirm.title}>
           <h3 className="mb-1.5 font-display text-[15px] font-semibold tracking-tight">{confirm.title}</h3>
           <p className="mb-3.5 text-[12.5px] text-muted">{confirm.text}</p>
           <div className="grid grid-cols-2 gap-2.5">
@@ -616,10 +616,10 @@ function Badge({ children, dark }: { children: React.ReactNode; dark?: boolean }
 }
 
 // ----- Модалки -----
-function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+function Modal({ children, onClose, label }: { children: React.ReactNode; onClose: () => void; label?: string }) {
   return (
     <div className="fixed inset-0 z-[60] flex animate-fade-in items-center justify-center bg-petrol/55 p-5 backdrop-blur-[2px]" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div role="dialog" aria-modal="true" className="w-full max-w-sm animate-rise-in rounded-2xl border border-line bg-surface p-5 shadow-lift">{children}</div>
+      <div role="dialog" aria-modal="true" aria-label={label} className="w-full max-w-sm animate-rise-in rounded-2xl border border-line bg-surface p-5 shadow-lift">{children}</div>
     </div>
   );
 }
@@ -629,7 +629,7 @@ function PinModal({ onOk, onClose }: { onOk: (v: string) => boolean; onClose: ()
   const [err, setErr] = useState('');
   const submit = () => { if (!onOk(v)) setErr('Неверный PIN'); };
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} label="Вход администратора">
       <h3 className="mb-1.5 font-display text-[15px] font-semibold tracking-tight">Вход администратора</h3>
       <p className="mb-3.5 text-[12.5px] text-muted">Введите PIN, чтобы менять закупочные цены и сохранять данные. Это простая защита от случайных правок — не используйте важные пароли.</p>
       <input
