@@ -1,22 +1,1318 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0F3D3E" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0A1817" media="(prefers-color-scheme: dark)" />
-    <title>Калькулятор АБС · себестоимость и маржа</title>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="Финансовый директор на аутсорсе — находим замороженные деньги и возвращаем в оборот без штатного финдиректора">
+<title>Финансовый директор на аутсорсе — найдите замороженные деньги</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500;1,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#08080d; --coal:#0f0e16; --ink:#16141f; --ink-2:#1d1a28;
+    --gold:#d8b25e; --gold-bright:#f3d690; --gold-deep:#9c7826;
+    --cream:#f3ecdf; --cream-dim:#cbc3b6; --muted:#857d92; --muted-2:#5f586e;
+    --plus:#86c08f; --loss:#dd6b50;
+    --line:rgba(216,178,94,.16);
+    --glow:0 0 80px rgba(216,178,94,.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Manrope',sans-serif;background:var(--void);color:var(--cream);
+    line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;position:relative}
 
-    <!-- Google Fonts: Space Grotesk (заголовки), Inter (текст), IBM Plex Mono (цифры) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  /* зерно поверх всего — плёночная фактура */
+  body::after{content:"";position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.045;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  ::selection{background:var(--gold);color:#1a1206}
+
+  h1,h2,h3,.serif{font-family:'Playfair Display',serif;line-height:1.02;letter-spacing:-.01em}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 26px;position:relative;z-index:3}
+  .narrow{max-width:780px}
+  section{padding:clamp(70px,11vw,130px) 0;position:relative}
+  .gold-text{background:linear-gradient(110deg,var(--gold-bright),var(--gold) 45%,var(--gold-deep));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .kick{font-family:'Manrope';font-size:12px;font-weight:700;letter-spacing:.34em;text-transform:uppercase;
+    color:var(--gold);margin-bottom:24px;display:flex;align-items:center;gap:14px}
+  .kick::before{content:"";width:34px;height:1px;background:var(--gold);opacity:.6}
+  .tnum{font-variant-numeric:tabular-nums}
+
+  /* прогресс-бар */
+  #prog{position:fixed;top:0;left:0;height:2px;width:0;z-index:999;
+    background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright));
+    box-shadow:0 0 12px var(--gold);transition:width .1s linear}
+
+  /* кнопки */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:11px;cursor:pointer;
+    text-decoration:none;font-family:'Manrope';font-weight:700;font-size:16px;
+    padding:18px 30px;border-radius:2px;border:none;
+    background:linear-gradient(110deg,var(--gold-bright),var(--gold));color:#1a1206;
+    position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s;
+    box-shadow:0 14px 40px -12px rgba(216,178,94,.6)}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 20px 50px -12px rgba(216,178,94,.8)}
+  .btn:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+  .btn::after{content:"";position:absolute;top:0;left:-120%;width:60%;height:100%;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transition:left .6s}
+  .btn:hover::after{left:140%}
+  .btn-ln{background:transparent;color:var(--gold);border:1px solid var(--line);
+    box-shadow:none}
+  .btn-ln:hover{border-color:var(--gold);background:rgba(216,178,94,.06);box-shadow:none}
+  .micro{font-size:13px;color:var(--muted);margin-top:14px;letter-spacing:.04em}
+
+  /* reveal — базовый up, варианты ниже, .in переопределяет последним */
+  .reveal{opacity:0;transition:opacity .9s cubic-bezier(.16,.8,.3,1),transform .9s cubic-bezier(.16,.8,.3,1)}
+  .reveal[data-rv="up"]{transform:translateY(40px)}
+  .reveal[data-rv="left"]{transform:translateX(-52px)}
+  .reveal[data-rv="right"]{transform:translateX(52px)}
+  .reveal[data-rv="scale"]{transform:scale(.9)}
+  /* ВАЖНО: .in объявлен последним — побеждает data-rv варианты по специфичности */
+  .reveal.in{opacity:1;transform:none}
+
+  /* ============ HERO ============ */
+  .hero{min-height:100svh;display:flex;align-items:center;text-align:center;overflow:hidden;
+    background:radial-gradient(130% 90% at 50% -20%,#1b1830,var(--void) 55%)}
+  .hero-glow{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(40% 34% at 50% 30%,rgba(216,178,94,.22),transparent 70%);
+    animation:breathe 7s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.12)}}
+  .grid-lines{position:absolute;inset:0;pointer-events:none;opacity:.4;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),
+      linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:80px 80px;
+    mask:radial-gradient(70% 60% at 50% 40%,#000,transparent);
+    -webkit-mask:radial-gradient(70% 60% at 50% 40%,#000,transparent)}
+  .hero h1{font-size:clamp(38px,8vw,82px);font-weight:900;color:var(--cream);margin-bottom:6px}
+  .hero h1 em{font-style:italic;font-weight:500}
+  .type{display:inline-block;border-right:3px solid var(--gold);padding-right:5px;
+    animation:blink 1.05s step-end infinite}
+  @keyframes blink{50%{border-color:transparent}}
+  .hero-sub{font-size:clamp(16px,2.4vw,20px);color:var(--cream-dim);
+    max-width:580px;margin:34px auto 40px;line-height:1.6}
+  .hero .btn{min-width:300px}
+  .scrolldown{margin-top:64px;font-size:11px;letter-spacing:.3em;color:var(--muted);
+    text-transform:uppercase}
+  .scrolldown span{display:block;width:1px;height:42px;margin:14px auto 0;
+    background:linear-gradient(var(--gold),transparent);animation:drop 2s ease-in-out infinite}
+  @keyframes drop{
+    0%{transform:scaleY(0);transform-origin:top}
+    50%{transform:scaleY(1);transform-origin:top}
+    50.1%{transform-origin:bottom}
+    100%{transform:scaleY(0);transform-origin:bottom}}
+
+  /* ============ МАНИФЕСТ ============ */
+  .manifesto p{font-family:'Playfair Display';font-size:clamp(26px,4.6vw,46px);font-weight:500;
+    line-height:1.28;color:var(--muted-2);max-width:900px}
+  .manifesto b{color:var(--cream);font-weight:700}
+  .manifesto .hl{font-style:italic}
+
+  /* ============ ЯДРО — СЕЙФ ============ */
+  .core{background:linear-gradient(180deg,var(--void),var(--coal))}
+  .core-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+  @media(max-width:880px){.core-grid{grid-template-columns:1fr;gap:36px}}
+
+  .leak{display:flex;align-items:center;gap:15px;padding:17px 18px;
+    border:1px solid var(--line);border-radius:3px;margin-bottom:11px;
+    cursor:pointer;user-select:none;transition:.3s;background:rgba(255,255,255,.012)}
+  .leak:hover{border-color:rgba(216,178,94,.45)}
+  .leak:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .leak.on{background:rgba(216,178,94,.09);border-color:var(--gold)}
+  .leak .box{width:24px;height:24px;border:1.5px solid var(--muted);border-radius:3px;
+    flex-shrink:0;display:grid;place-items:center;color:#1a1206;
+    font-size:14px;font-weight:800;transition:.25s;pointer-events:none}
+  .leak.on .box{background:var(--gold);border-color:var(--gold)}
+  .leak .box::after{content:"✓";opacity:0;transition:.2s}
+  .leak.on .box::after{opacity:1}
+  .leak-txt{font-size:15.5px;font-weight:600;pointer-events:none}
+
+  .turn{margin:26px 0 6px}
+  .turn-lbl{display:flex;justify-content:space-between;align-items:baseline;
+    font-size:14px;color:var(--cream-dim);margin-bottom:14px}
+  .turn-lbl b{font-family:'Playfair Display';font-size:22px;font-weight:700;color:var(--gold)}
+  input[type=range]{width:100%;-webkit-appearance:none;height:3px;
+    background:var(--line);border-radius:3px;outline:none;cursor:pointer}
+  input[type=range]:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;
+    border-radius:50%;cursor:pointer;
+    background:radial-gradient(circle at 35% 35%,var(--gold-bright),var(--gold-deep));
+    box-shadow:0 0 0 6px rgba(216,178,94,.16),0 4px 12px rgba(0,0,0,.5)}
+  input[type=range]::-moz-range-thumb{width:30px;height:30px;border:none;
+    border-radius:50%;cursor:pointer;
+    background:radial-gradient(circle at 35% 35%,var(--gold-bright),var(--gold-deep))}
+
+  /* vault — одометр */
+  .vault{border:1px solid var(--line);border-radius:4px;padding:34px 30px;text-align:center;
+    background:radial-gradient(120% 90% at 50% 0%,rgba(216,178,94,.08),transparent 70%);
+    position:sticky;top:24px}
+  .vault-cap{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted)}
+  .vault-num{font-family:'Playfair Display';font-weight:900;font-size:clamp(40px,9vw,68px);
+    line-height:1;margin:14px 0 4px;transition:transform .15s}
+  .vault-num.bump{transform:scale(1.06)}
+  .vault-sub{font-size:13.5px;color:var(--cream-dim)}
+  .vault-year{margin-top:18px;padding-top:18px;border-top:1px dashed var(--line);
+    font-size:14px;color:var(--muted)}
+  .vault-year b{color:var(--gold);font-family:'Playfair Display';font-size:24px}
+  .flow-hint{text-align:center;font-size:13px;letter-spacing:.06em;color:var(--muted);
+    margin:38px 0 8px;text-transform:uppercase}
+  .flow-hint::after{content:"↓";display:block;font-size:22px;color:var(--gold);
+    margin-top:8px;animation:drop2 1.8s infinite}
+  @keyframes drop2{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(7px);opacity:1}}
+
+  /* ============ ТАРИФЫ ============ */
+  .tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:760px){.tiers{grid-template-columns:1fr}}
+  .tier{position:relative;border:1px solid var(--line);border-radius:4px;
+    padding:28px 24px;overflow:hidden;background:var(--ink);transition:.4s;isolation:isolate}
+  .tier.best{border-color:rgba(216,178,94,.5)}
+  .tier .fill{position:absolute;left:0;right:0;bottom:0;height:0%;z-index:-1;
+    transition:height .7s cubic-bezier(.2,.8,.2,1);
+    background:linear-gradient(0deg,rgba(216,178,94,.28),rgba(216,178,94,.04));
+    border-top:1px solid var(--gold)}
+  .tier.covered{border-color:var(--gold);box-shadow:var(--glow)}
+  .tier-badge{position:absolute;top:14px;right:14px;font-size:10px;font-weight:800;
+    letter-spacing:.1em;padding:5px 10px;border-radius:2px;text-transform:uppercase;
+    opacity:0;transform:translateY(-6px);transition:.4s}
+  .tier.covered .tier-badge{opacity:1;transform:none;background:var(--gold);color:#1a1206}
+  .tier.best:not(.covered) .tier-badge{opacity:1;transform:none;
+    background:rgba(216,178,94,.14);color:var(--gold)}
+  .tier-name{font-family:'Playfair Display';font-weight:700;font-size:22px}
+  .tier-price{margin:12px 0 4px;font-family:'Playfair Display';font-weight:900;
+    font-size:30px;color:var(--cream)}
+  .tier-price small{font-family:'Manrope';font-size:14px;color:var(--muted);font-weight:500}
+  .tier.covered .tier-price .amt{text-decoration:line-through;
+    text-decoration-color:var(--loss);color:var(--muted);font-size:22px}
+  .tier-net{font-size:13.5px;font-weight:700;color:var(--plus);min-height:20px;
+    margin-top:4px;opacity:0;transition:.4s}
+  .tier.covered .tier-net{opacity:1}
+  .tier-pay{font-size:12.5px;color:var(--gold);margin-top:2px;min-height:16px}
+  .tier ul{list-style:none;margin:18px 0 0;border-top:1px solid var(--line);padding-top:16px}
+  .tier li{font-size:14px;color:var(--cream-dim);padding:6px 0 6px 22px;position:relative}
+  .tier li::before{content:"—";position:absolute;left:0;color:var(--gold);opacity:.6}
+  .tier-hook{font-size:13px;color:var(--muted);margin:4px 0 0;line-height:1.35;min-height:36px}
+  .tier.best .tier-hook{color:var(--cream-dim)}
+  .tier .demo{font-size:10px;color:var(--muted-2);letter-spacing:.1em;margin-top:14px}
+  /* stagger fill animation — left-to-right narrative */
+  .tiers .tier:nth-child(2) .fill{transition-delay:.12s}
+  .tiers .tier:nth-child(3) .fill{transition-delay:.24s}
+
+  /* ============ БУХ vs ФИНДИР ============ */
+  .vs{display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:center}
+  @media(max-width:680px){.vs{grid-template-columns:1fr;gap:14px}.vs .vs-mid{display:none}}
+  .vs-col{border:1px solid var(--line);border-radius:4px;padding:28px 24px}
+  .vs-col.cfo{background:radial-gradient(120% 100% at 50% 0,rgba(216,178,94,.08),transparent);
+    border-color:rgba(216,178,94,.4)}
+  .vs-col h4{font-family:'Playfair Display';font-size:21px;margin-bottom:6px}
+  .vs-col .role{font-size:12px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:18px}
+  .vs-col p{font-size:14.5px;color:var(--cream-dim);padding:9px 0;border-top:1px solid var(--line)}
+  .vs-mid{font-family:'Playfair Display';font-style:italic;font-size:26px;color:var(--gold);
+    text-align:center}
+  .cfo h4{color:var(--gold)}
+
+  /* ============ ЧТО ПОЛУЧАЕТЕ ============ */
+  .deliv{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  @media(max-width:680px){.deliv{grid-template-columns:1fr}}
+  .d-item{padding:26px 24px;border-top:1px solid var(--line);position:relative;transition:.3s}
+  .d-item:hover{background:rgba(216,178,94,.04)}
+  .d-num{font-family:'Playfair Display';font-style:italic;font-size:16px;
+    color:var(--gold);opacity:.7}
+  .d-item b{display:block;font-family:'Playfair Display';font-size:20px;
+    font-weight:700;margin:6px 0 4px}
+  .d-item span{font-size:14px;color:var(--muted)}
+
+  /* ============ ВИДЕО ============ */
+  .video-wrap{position:relative;border:1px solid var(--line);border-radius:4px;
+    overflow:hidden;aspect-ratio:16/9;cursor:pointer;
+    background:radial-gradient(110% 90% at 50% 40%,var(--ink-2),var(--void))}
+  .video-wrap .pin{position:absolute;inset:0;display:grid;place-items:center;
+    text-align:center;padding:20px}
+  .play-btn{width:84px;height:84px;border-radius:50%;
+    background:linear-gradient(120deg,var(--gold-bright),var(--gold));
+    display:grid;place-items:center;margin:0 auto 18px;
+    box-shadow:0 0 0 0 rgba(216,178,94,.5);animation:pulse 2.6s infinite}
+  .play-btn::after{content:"";border-left:26px solid #1a1206;
+    border-top:16px solid transparent;border-bottom:16px solid transparent;margin-left:7px}
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(216,178,94,.45)}
+    70%{box-shadow:0 0 0 26px rgba(216,178,94,0)}
+    100%{box-shadow:0 0 0 0 rgba(216,178,94,0)}}
+  .video-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+
+  /* ============ ТАЙМЛАЙН ============ */
+  .tl{position:relative;padding-left:30px}
+  .tl::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:1px;
+    background:linear-gradient(var(--gold),transparent)}
+  .tl-step{position:relative;padding:0 0 30px}
+  .tl-step::before{content:"";position:absolute;left:-27px;top:6px;width:13px;
+    height:13px;border-radius:50%;background:var(--void);border:2px solid var(--gold)}
+  .tl-step b{font-family:'Playfair Display';font-size:19px}
+  .tl-step p{font-size:14.5px;color:var(--muted);margin-top:3px}
+  .nda-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;
+    font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);
+    border:1px solid var(--line);padding:4px 10px;border-radius:20px;margin-top:8px}
+
+  /* ============ КЕЙСЫ ============ */
+  .case{border:1px solid var(--line);border-radius:4px;padding:24px;margin-bottom:13px;
+    cursor:pointer;transition:.3s;background:var(--ink)}
+  .case:hover{border-color:var(--gold);transform:translateX(5px)}
+  .case:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .case-tag{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+  .case b{display:block;font-family:'Playfair Display';font-size:21px;margin:8px 0;font-weight:700}
+  .case .res{color:var(--plus);font-weight:700}
+
+  .modal{position:fixed;inset:0;background:rgba(8,8,13,.82);backdrop-filter:blur(6px);
+    display:none;place-items:center;z-index:500;padding:22px}
+  .modal.open{display:grid}
+  .modal-box{background:var(--coal);border:1px solid var(--line);border-radius:6px;
+    padding:34px 30px;max-width:500px;width:100%;position:relative;
+    animation:pop .4s cubic-bezier(.2,.8,.2,1)}
+  @keyframes pop{from{opacity:0;transform:scale(.94) translateY(18px)}to{opacity:1;transform:none}}
+  .modal-x{position:absolute;top:16px;right:16px;width:36px;height:36px;
+    border:1px solid var(--line);background:none;border-radius:50%;
+    color:var(--muted);font-size:17px;cursor:pointer;transition:.2s}
+  .modal-x:hover{border-color:var(--gold);color:var(--cream)}
+  .modal-x:focus-visible{outline:2px solid var(--gold)}
+  .modal-box h3{font-size:25px;margin:6px 0 18px}
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}
+  .ba div{padding:16px;border-radius:3px}
+  .ba .was{background:rgba(221,107,80,.1)}.ba .now{background:rgba(134,192,143,.12)}
+  .ba small{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .ba b{display:block;font-family:'Playfair Display';font-size:19px;margin-top:5px}
+
+  /* ============ FAQ ============ */
+  .faq{border-bottom:1px solid var(--line)}
+  .faq-q{width:100%;text-align:left;background:none;border:none;color:var(--cream);
+    cursor:pointer;font-family:'Playfair Display';font-size:19px;font-weight:500;
+    padding:22px 0;display:flex;justify-content:space-between;gap:16px;align-items:center}
+  .faq-q:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:2px}
+  .faq-q i{color:var(--gold);font-style:normal;font-size:24px;transition:.3s;flex-shrink:0}
+  .faq.open .faq-q i{transform:rotate(45deg)}
+  .faq-a{max-height:0;overflow:hidden;transition:max-height .4s;color:var(--muted);font-size:15px}
+  .faq.open .faq-a{max-height:280px;padding-bottom:22px}
+
+  /* ============ ФИНАЛ ============ */
+  .final{background:radial-gradient(120% 100% at 50% 100%,#1b1830,var(--void) 60%);
+    text-align:center}
+  .final h2{font-size:clamp(32px,7vw,64px);font-weight:900;margin-bottom:18px}
+  .final h2 em{font-style:italic;font-weight:500}
+  .scar{display:inline-block;border:1px solid var(--line);color:var(--gold);
+    font-size:13px;letter-spacing:.06em;padding:9px 18px;border-radius:30px;margin-bottom:28px}
+  .form-wrap{max-width:430px;margin:0 auto;border:1px solid var(--line);border-radius:6px;
+    padding:30px 26px;background:rgba(255,255,255,.014)}
+  .form-wrap input{width:100%;padding:16px;margin-bottom:11px;border:1px solid var(--line);
+    border-radius:3px;background:rgba(0,0,0,.3);color:var(--cream);
+    font-family:'Manrope';font-size:15px;transition:border-color .2s}
+  .form-wrap input::placeholder{color:var(--muted-2)}
+  .form-wrap input:focus-visible{outline:none;border-color:var(--gold)}
+  .form-wrap input.err{border-color:var(--loss)}
+  .thanks{display:none}.thanks.show{display:block;animation:pop .5s}
+  .contacts{margin-top:30px;font-size:14px;color:var(--muted)}
+  .contacts a{color:var(--gold);text-decoration:none}
+  .contacts a:hover{text-decoration:underline}
+  footer{text-align:center;padding:30px;font-size:12.5px;color:var(--muted-2);
+    border-top:1px solid var(--line)}
+  .ph{outline:1px dashed rgba(216,178,94,.5);outline-offset:2px;border-radius:2px}
+
+  /* ============ БОТ-ГИД ============ */
+  #guide{position:fixed;top:10px;left:50%;z-index:900;
+    transform:translateX(-50%);
+    transition:left .9s cubic-bezier(.4,.1,.2,1),opacity .5s,transform .85s;
+    width:64px;pointer-events:none;will-change:left,transform}
+  @media(max-width:600px){#guide{width:50px;top:6px}}
+
+  .g-body{position:relative;width:56px;height:56px;margin:0 auto;
+    border-radius:18px 18px 16px 16px;
+    background:radial-gradient(circle at 38% 30%,var(--gold-bright),var(--gold) 55%,var(--gold-deep));
+    box-shadow:0 8px 24px rgba(0,0,0,.5),inset 0 2px 4px rgba(255,255,255,.4),
+      0 0 26px rgba(216,178,94,.4);
+    animation:gbob 2.4s ease-in-out infinite}
+  @media(max-width:600px){.g-body{width:44px;height:44px;border-radius:14px 14px 12px 12px}}
+  @keyframes gbob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3px) rotate(-1deg)}}
+  #guide.walking .g-body{animation:gwalk .4s ease-in-out infinite}
+  @keyframes gwalk{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-4px) rotate(3deg)}}
+
+  /* антенна */
+  .g-ant{position:absolute;top:-13px;left:50%;width:2px;height:11px;
+    background:var(--gold-deep);transform:translateX(-50%)}
+  .g-ant::after{content:"";position:absolute;top:-5px;left:-2.5px;width:7px;height:7px;
+    border-radius:50%;background:var(--gold-bright);box-shadow:0 0 8px var(--gold);
+    animation:blinkled 1.6s infinite}
+  @keyframes blinkled{0%,100%{opacity:1}50%{opacity:.3}}
+
+  /* глаза */
+  .g-eyes{position:absolute;top:19px;left:0;right:0;display:flex;justify-content:center;gap:11px}
+  @media(max-width:600px){.g-eyes{top:14px;gap:8px}}
+  .g-eye{width:9px;height:11px;background:#1a1206;border-radius:50%;animation:eyeblink 4s infinite}
+  @media(max-width:600px){.g-eye{width:7px;height:9px}}
+  @keyframes eyeblink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+
+  /* рот */
+  .g-mouth{position:absolute;bottom:11px;left:50%;transform:translateX(-50%);
+    width:14px;height:7px;border-bottom:2.5px solid #1a1206;
+    border-radius:0 0 14px 14px;transition:.3s}
+  @media(max-width:600px){.g-mouth{bottom:8px;width:11px;height:5px}}
+
+  /* ножки */
+  .g-legs{position:absolute;bottom:-9px;left:0;right:0;display:flex;justify-content:center;gap:13px}
+  @media(max-width:600px){.g-legs{bottom:-7px;gap:10px}}
+  .g-leg{width:4px;height:10px;background:var(--gold-deep);border-radius:0 0 3px 3px;transform-origin:top}
+  @media(max-width:600px){.g-leg{width:3px;height:8px}}
+  #guide.walking .g-leg:first-child{animation:step .4s infinite}
+  #guide.walking .g-leg:last-child{animation:step .4s infinite .2s}
+  @keyframes step{0%,100%{transform:rotate(18deg)}50%{transform:rotate(-18deg)}}
+
+  /* рука */
+  .g-arm{position:absolute;right:-10px;bottom:6px;width:16px;height:4px;
+    background:var(--gold-deep);border-radius:3px;transform-origin:left;
+    transform:rotate(20deg);opacity:0;transition:opacity .3s}
+  .g-arm::after{content:"👇";position:absolute;right:-14px;top:-7px;font-size:13px}
+  @media(max-width:600px){.g-arm{right:-8px;width:12px}}
+
+  /* спич-бабл */
+  .g-bubble{position:absolute;top:50%;left:72px;
+    transform:translateY(-50%) scale(.6);transform-origin:left center;
+    background:var(--coal);border:1px solid var(--gold);color:var(--cream);
+    font-size:12.5px;font-weight:600;line-height:1.35;padding:9px 13px;
+    border-radius:3px;white-space:nowrap;
+    box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;
+    transition:opacity .35s,transform .35s;letter-spacing:.01em;pointer-events:none}
+  .g-bubble::before{content:"";position:absolute;left:-6px;top:50%;
+    transform:translateY(-50%) rotate(45deg);width:9px;height:9px;
+    background:var(--coal);border-left:1px solid var(--gold);border-bottom:1px solid var(--gold)}
+  #guide.show-bubble .g-bubble{opacity:1;transform:translateY(-50%) scale(1)}
+
+  /* бабл слева когда бот в правой половине */
+  #guide.flip .g-bubble{left:auto;right:72px;transform-origin:right center;
+    transform:translateY(-50%) scale(.6)}
+  #guide.flip .g-bubble::before{left:auto;right:-6px;border-left:none;border-bottom:none;
+    border-right:1px solid var(--gold);border-top:1px solid var(--gold)}
+  #guide.show-bubble.flip .g-bubble{transform:translateY(-50%) scale(1)}
+  @media(max-width:600px){
+    .g-bubble{font-size:11px;left:56px;white-space:normal;width:140px;max-width:140px}
+    #guide.flip .g-bubble{right:56px;left:auto}}
+
+  /* ЭМОЦИИ */
+  #guide.e-happy .g-mouth{height:9px;border-radius:0 0 16px 16px}
+  #guide.e-think .g-mouth{width:7px;height:0;border-bottom:2.5px solid #1a1206;border-radius:0}
+  #guide.e-point .g-arm{opacity:1;animation:pointArm 1s ease-in-out infinite}
+  @keyframes pointArm{0%,100%{transform:rotate(20deg)}50%{transform:rotate(40deg)}}
+
+  #guide.e-stomp .g-body{animation:gstomp .5s ease-in-out infinite}
+  @keyframes gstomp{0%,100%{transform:translateY(0)}30%{transform:translateY(-9px) rotate(-4deg)}60%{transform:translateY(0) rotate(2deg)}}
+  #guide.e-stomp .g-leg:first-child{animation:stompanim .5s infinite}
+  @keyframes stompanim{0%,100%{transform:rotate(0)}40%{transform:rotate(-35deg)}55%{transform:rotate(8deg)}}
+  #guide.e-stomp::after{content:"";position:absolute;bottom:-12px;left:50%;
+    transform:translateX(-50%);width:30px;height:5px;border-radius:50%;
+    background:radial-gradient(rgba(216,178,94,.5),transparent 70%);
+    animation:dust .5s infinite}
+  @keyframes dust{0%{opacity:.7;transform:translateX(-50%) scale(.4)}100%{opacity:0;transform:translateX(-50%) scale(1.5)}}
+
+  /* сон / уход */
+  #guide.asleep{transform:translateX(-50%) translateY(-140px);opacity:0;pointer-events:none}
+  #guide.gone{transform:translateX(-50%) translateY(-150px) scale(.5);opacity:0}
+
+  /* машет */
+  #guide.e-wave .g-arm{opacity:1;animation:wave .55s ease-in-out infinite}
+  #guide.e-wave .g-arm::after{content:"👋"}
+  @keyframes wave{0%,100%{transform:rotate(-28deg)}50%{transform:rotate(22deg)}}
+
+  /* искра-пробуждение в хедлайне */
+  .waker{cursor:pointer;color:var(--gold);font-size:14px;vertical-align:super;
+    margin-left:3px;pointer-events:auto;animation:wpulse 2.2s infinite;
+    display:inline-block;border-radius:2px}
+  .waker:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  @keyframes wpulse{0%,100%{opacity:.3}50%{opacity:1;text-shadow:0 0 12px var(--gold)}}
+
+  /* vault hint — zero-state prompt */
+  .vault-hint{font-size:12px;color:var(--muted);margin-top:12px;
+    font-style:italic;opacity:.7;transition:opacity .3s}
+  .vault-hint.hidden{opacity:0;pointer-events:none}
+
+  /* reduced-motion */
+  @media(prefers-reduced-motion:reduce){
+    #guide{display:none}
+    .reveal{transition:opacity .4s !important;transform:none !important}
+    .g-body,.hero-glow,.scrolldown span,.play-btn,.type,
+    .g-ant::after,.g-eye,.flow-hint::after{animation:none !important}
+  }
+</style>
+</head>
+<body>
+<div id="prog" role="progressbar" aria-label="Прогресс чтения" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+
+<!-- ====== БОТ-ГИД ====== -->
+<div id="guide" class="asleep" aria-hidden="true" role="presentation">
+  <div class="g-bubble" id="gBubble"></div>
+  <div class="g-body">
+    <div class="g-ant"></div>
+    <div class="g-eyes">
+      <div class="g-eye"></div>
+      <div class="g-eye"></div>
+    </div>
+    <div class="g-mouth"></div>
+    <div class="g-arm"></div>
+    <div class="g-legs">
+      <div class="g-leg"></div>
+      <div class="g-leg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== HERO ====== -->
+<section class="hero" id="s0">
+  <div class="hero-glow"></div>
+  <div class="grid-lines"></div>
+  <div class="wrap">
+    <div class="kick" style="justify-content:center">
+      Финансовый директор на аутсорсе
+      <span class="waker" id="waker" role="button" tabindex="0"
+        aria-label="Разбудить гида" title="нажми ✦">✦</span>
+    </div>
+    <h1>Где <em>заморожены</em><br><span class="type gold-text" id="type"></span></h1>
+    <p class="hero-sub">У прибыльного на бумаге бизнеса деньги застревают в складе,
+      дебиторке и скидках «на глаз». Мы находим их и возвращаем в оборот —
+      без штатного финдиректора за <span class="ph">[X]</span>× дешевле.</p>
+    <a href="#core" class="btn">Найти замороженные деньги</a>
+    <p class="micro">30 минут · бесплатно · без обязательств</p>
+    <div class="scrolldown" aria-hidden="true">прокрутите<span></span></div>
+  </div>
+</section>
+
+<!-- ====== МАНИФЕСТ БОЛИ ====== -->
+<section class="manifesto" id="s1">
+  <div class="wrap narrow">
+    <p class="reveal" data-rv="up">
+      Вы не теряете деньги в один момент.
+      <b>Они утекают тихо</b> — пока вы заняты продажами.
+      <span class="hl gold-text">Зависший склад. Дебиторка, которую не торопятся
+      гасить. Скидки без расчёта маржи.</span>
+      К концу года это <b>миллионы</b>, которых вы так и не увидели.
+    </p>
+  </div>
+</section>
+
+<!-- ====== ЯДРО: КАРТА УТЕЧЕК + КАЛЬКУЛЯТОР + ТАРИФЫ ====== -->
+<section class="core" id="core">
+  <div class="wrap">
+    <div class="kick">Карта утечек</div>
+    <h2 class="serif reveal" data-rv="left"
+      style="font-size:clamp(28px,5.5vw,46px);font-weight:700;margin-bottom:12px">
+      Сколько денег у вас заморожено
+    </h2>
+    <p class="reveal" data-rv="right"
+      style="color:var(--muted);max-width:560px;margin-bottom:46px">
+      Отметьте слабые места, задайте оборот —
+      найденное внизу <span class="gold-text">само закроет стоимость услуги.</span>
+    </p>
+
+    <div class="core-grid">
+      <!-- утечки + слайдер -->
+      <div class="reveal" data-rv="left">
+        <!-- data-rate — консервативная оценка, правится без смены кода -->
+        <div class="leak" data-rate="0.015" role="checkbox" aria-checked="false" tabindex="0">
+          <span class="box" aria-hidden="true"></span>
+          <span class="leak-txt">Мёртвый склад, зависшие остатки</span>
+        </div>
+        <div class="leak" data-rate="0.012" role="checkbox" aria-checked="false" tabindex="0">
+          <span class="box" aria-hidden="true"></span>
+          <span class="leak-txt">Растёт дебиторка, платят с задержкой</span>
+        </div>
+        <div class="leak" data-rate="0.010" role="checkbox" aria-checked="false" tabindex="0">
+          <span class="box" aria-hidden="true"></span>
+          <span class="leak-txt">Скидки «на глаз», без расчёта маржи</span>
+        </div>
+        <div class="leak" data-rate="0.015" role="checkbox" aria-checked="false" tabindex="0">
+          <span class="box" aria-hidden="true"></span>
+          <span class="leak-txt">Не знаю прибыльность по продуктам</span>
+        </div>
+        <div class="leak" data-rate="0.008" role="checkbox" aria-checked="false" tabindex="0">
+          <span class="box" aria-hidden="true"></span>
+          <span class="leak-txt">Случаются кассовые разрывы</span>
+        </div>
+        <div class="turn">
+          <div class="turn-lbl">
+            <span>Месячный оборот</span>
+            <b id="toVal">5 млн ₽</b>
+          </div>
+          <input type="range" id="turnover" min="1" max="150" value="5"
+            aria-label="Месячный оборот, млн рублей" aria-valuemin="1" aria-valuemax="150" aria-valuenow="5">
+        </div>
+      </div>
+
+      <!-- счётчик-одометр -->
+      <div class="vault reveal" data-rv="scale">
+        <div class="vault-cap">Заморожено впустую</div>
+        <!-- оценочно: найдено/мес = оборот_руб × Σ(data-rate выбранных) -->
+        <div class="vault-num gold-text tnum" id="found" aria-live="polite" aria-atomic="true">0 ₽</div>
+        <div class="vault-sub">в месяц · оценочно</div>
+        <div class="vault-year">в год это <b class="tnum" id="foundYear">0 ₽</b></div>
+        <div id="vaultHint" class="vault-hint">← отметьте хотя бы одну утечку</div>
+      </div>
+    </div>
+
+    <div class="flow-hint reveal" data-rv="up" aria-hidden="true">эти деньги закрывают стоимость работы</div>
+
+    <!-- якорь сравнения: штатный финдиректор для контекста цен -->
+    <p class="reveal" data-rv="up" style="text-align:center;font-size:13px;color:var(--muted-2);margin-bottom:20px">
+      Штатный финдиректор: от 250 000 ₽/мес (оклад + налоги + соцпакет)
+    </p>
+
+    <!-- тарифы с заливкой окупаемости -->
+    <!-- демо-цены в data-price (₽/мес) — ЗАМЕНИТЬ на реальные перед публикацией -->
+    <div class="tiers reveal" data-rv="up">
+      <div class="tier" data-price="35000">
+        <div class="fill" aria-hidden="true"></div>
+        <div class="tier-badge">окупается</div>
+        <div class="tier-name">Старт</div>
+        <div class="tier-hook">Видите, куда уходят деньги — и управляете этим</div>
+        <div class="tier-price">
+          <span class="amt"><span class="ph">35 000</span></span>
+          <small>₽/мес</small>
+        </div>
+        <div class="tier-net" data-net aria-live="polite"></div>
+        <div class="tier-pay" data-pay></div>
+        <ul>
+          <li>Управленческий учёт</li>
+          <li>ДДС и P&amp;L</li>
+          <li>Ежемесячный отчёт</li>
+        </ul>
+        <div class="demo">демо-цена</div>
+      </div>
+
+      <div class="tier best" data-price="65000">
+        <div class="fill" aria-hidden="true"></div>
+        <div class="tier-badge">оптимальный</div>
+        <div class="tier-name">Бизнес</div>
+        <div class="tier-hook">Никогда не попадёте в кассовый разрыв</div>
+        <div class="tier-price">
+          <span class="amt"><span class="ph">65 000</span></span>
+          <small>₽/мес</small>
+        </div>
+        <div class="tier-net" data-net aria-live="polite"></div>
+        <div class="tier-pay" data-pay></div>
+        <ul>
+          <li>Всё из «Старт»</li>
+          <li>Платёжный календарь</li>
+          <li>Финансовый дашборд</li>
+          <li>Стратегические сессии</li>
+        </ul>
+        <div class="demo">демо-цена</div>
+      </div>
+
+      <div class="tier" data-price="120000">
+        <div class="fill" aria-hidden="true"></div>
+        <div class="tier-badge">окупается</div>
+        <div class="tier-name">Премиум</div>
+        <div class="tier-hook">Готовы к росту, инвестициям и масштабу</div>
+        <div class="tier-price">
+          <span class="amt"><span class="ph">120 000</span></span>
+          <small>₽/мес</small>
+        </div>
+        <div class="tier-net" data-net aria-live="polite"></div>
+        <div class="tier-pay" data-pay></div>
+        <ul>
+          <li>Всё из «Бизнес»</li>
+          <li>Бюджетирование, план-факт</li>
+          <li>Подготовка к инвестициям</li>
+        </ul>
+        <div class="demo">демо-цена</div>
+      </div>
+    </div>
+
+    <p style="text-align:center;margin-top:34px">
+      <a href="#final" class="btn">Узнать точную цифру на разборе — 30 мин, бесплатно</a>
+    </p>
+  </div>
+</section>
+
+<!-- ====== БУХГАЛТЕР vs ФИНДИРЕКТОР ====== -->
+<section id="s3">
+  <div class="wrap narrow">
+    <div class="kick">Частый вопрос</div>
+    <h2 class="serif reveal" data-rv="up"
+      style="font-size:clamp(26px,5vw,42px);font-weight:700;margin-bottom:36px">
+      «У меня же есть бухгалтер»
+    </h2>
+    <div class="vs reveal" data-rv="scale">
+      <div class="vs-col">
+        <div class="role">Бухгалтер</div>
+        <h4>Смотрит назад</h4>
+        <p>Считает то, что уже случилось: налоги, отчётность</p>
+        <p>Его клиент — налоговая, не вы</p>
+        <p>Не его роль — искать вашу упущенную прибыль</p>
+      </div>
+      <div class="vs-mid" aria-hidden="true">vs</div>
+      <div class="vs-col cfo">
+        <div class="role">Финдиректор</div>
+        <h4>Смотрит вперёд</h4>
+        <p>Прогноз денег и прибыли на месяцы вперёд</p>
+        <p>Отвечает за ваши решения и рост</p>
+        <p>Находит замороженное и возвращает в оборот</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== ЧТО ПОЛУЧАЕТЕ ====== -->
+<section class="core" id="s4">
+  <div class="wrap">
+    <div class="kick">Осязаемый результат</div>
+    <h2 class="serif reveal" data-rv="left"
+      style="font-size:clamp(26px,5vw,42px);font-weight:700;margin-bottom:30px">
+      Что у вас появится в первый месяц
+    </h2>
+    <div class="deliv reveal" data-rv="up">
+      <div class="d-item">
+        <div class="d-num">01</div>
+        <b>Платёжный календарь</b>
+        <span>Видите кассовые разрывы за недели до них</span>
+      </div>
+      <div class="d-item">
+        <div class="d-num">02</div>
+        <b>Движение денег · ДДС</b>
+        <span>Куда реально уходят деньги</span>
+      </div>
+      <div class="d-item">
+        <div class="d-num">03</div>
+        <b>Прибыли и убытки · P&amp;L</b>
+        <span>Сколько вы зарабатываете на самом деле</span>
+      </div>
+      <div class="d-item">
+        <div class="d-num">04</div>
+        <b>Юнит-экономика</b>
+        <span>Что кормит бизнес, а что тянет вниз</span>
+      </div>
+      <div class="d-item">
+        <div class="d-num">05</div>
+        <b>Финансовый дашборд</b>
+        <span>Все ключевые цифры на одном экране</span>
+      </div>
+      <div class="d-item">
+        <div class="d-num">06</div>
+        <b>Бюджет и план-факт</b>
+        <span>Цель в цифрах и контроль отклонений</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== ВИДЕО ====== -->
+<section id="s5">
+  <div class="wrap narrow">
+    <div class="kick">За 90 секунд</div>
+    <h2 class="serif reveal" data-rv="right"
+      style="font-size:clamp(26px,5vw,42px);font-weight:700;margin-bottom:28px">
+      Как мы наводим порядок
+    </h2>
+    <div class="video-wrap reveal" data-rv="scale" id="videoWrap"
+      role="button" tabindex="0"
+      aria-label="Воспроизвести видео — загрузится по клику">
+      <div class="pin">
+        <div>
+          <div class="play-btn" aria-hidden="true"></div>
+          <b class="serif" style="font-size:20px">Смотреть, как это работает</b>
+          <p style="color:var(--muted);font-size:13px;margin-top:6px">
+            Загрузится по клику · <span class="ph">[ССЫЛКА_НА_ВИДЕО]</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== КАК РАБОТАЕМ ====== -->
+<section class="core" id="s6">
+  <div class="wrap narrow">
+    <div class="kick">Процесс</div>
+    <h2 class="serif reveal" data-rv="left"
+      style="font-size:clamp(26px,5vw,42px);font-weight:700;margin-bottom:36px">
+      Четыре шага
+    </h2>
+    <div class="tl reveal" data-rv="up">
+      <div class="tl-step">
+        <b>Бесплатный разбор</b>
+        <p>30 минут. Находим, где заморожены деньги, даём первые цифры.</p>
+      </div>
+      <div class="tl-step">
+        <b>Порядок в цифрах</b>
+        <p>Собираем учёт, ДДС, P&amp;L, платёжный календарь.</p>
+        <span class="nda-badge">🔒 Данные под NDA</span>
+      </div>
+      <div class="tl-step">
+        <b>Отчётность и дашборд</b>
+        <p>Каждый месяц — понятная картина бизнеса без хаоса.</p>
+      </div>
+      <div class="tl-step">
+        <b>Решения вместе с вами</b>
+        <p>Куда расти, где резать, как дойти до цели по деньгам.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== КЕЙСЫ ====== -->
+<section id="s7">
+  <div class="wrap narrow">
+    <div class="kick">Было → стало</div>
+    <h2 class="serif reveal" data-rv="right"
+      style="font-size:clamp(26px,5vw,42px);font-weight:700;margin-bottom:30px">
+      Результаты клиентов
+    </h2>
+    <div class="reveal" data-rv="up">
+      <div class="case" data-case="0" tabindex="0" role="button"
+        aria-label="Открыть кейс: оптовая торговля">
+        <div class="case-tag ph">[Оптовая торговля]</div>
+        <b>Кассовый разрыв найден за 2 месяца до</b>
+        <span class="res">Сэкономлено <span class="ph">[X] ₽</span></span>
+      </div>
+      <div class="case" data-case="1" tabindex="0" role="button"
+        aria-label="Открыть кейс: производство">
+        <div class="case-tag ph">[Производство]</div>
+        <b>Убыточное направление, которое маскировалось</b>
+        <span class="res">+<span class="ph">[X]%</span> к прибыли</span>
+      </div>
+      <div class="case" data-case="2" tabindex="0" role="button"
+        aria-label="Открыть кейс: розница">
+        <div class="case-tag ph">[Розница / Торговля]</div>
+        <b>Деньги, замороженные в складе</b>
+        <span class="res">Высвобождено <span class="ph">[X] ₽</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== FAQ ====== -->
+<section class="core" id="s8">
+  <div class="wrap narrow">
+    <div class="kick">Возражения</div>
+    <h2 class="serif reveal" data-rv="left"
+      style="font-size:clamp(26px,5vw,42px);font-weight:700;margin-bottom:24px">
+      Частые вопросы
+    </h2>
+    <div class="reveal" data-rv="up">
+      <div class="faq">
+        <button class="faq-q" id="fq1" aria-expanded="false" aria-controls="fa1">
+          <span>Вы не разбираетесь в моей отрасли?</span><i aria-hidden="true">+</i>
+        </button>
+        <div class="faq-a" id="fa1">
+          Финансовая логика универсальна — денежный поток, маржа и разрывы работают одинаково
+          в любой нише. Специфику отрасли поднимаем на разборе. За <span class="ph">[N]</span> лет
+          работали с десятками ниш.
+        </div>
+      </div>
+      <div class="faq">
+        <button class="faq-q" id="fq2" aria-expanded="false" aria-controls="fa2">
+          <span>Это дорого?</span><i aria-hidden="true">+</i>
+        </button>
+        <div class="faq-a" id="fa2">
+          Как вы видели в калькуляторе — найденное обычно перекрывает стоимость уже в первые
+          месяцы. Первый разбор бесплатный: посмотрите цифры и решайте.
+        </div>
+      </div>
+      <div class="faq">
+        <button class="faq-q" id="fq3" aria-expanded="false" aria-controls="fa3">
+          <span>Безопасно отдавать данные?</span><i aria-hidden="true">+</i>
+        </button>
+        <div class="faq-a" id="fa3">
+          Работаем по NDA до начала любых работ. Доступы к системам выдаёте вы сами
+          и отзываете в любой момент. Ни одна цифра не уходит третьим лицам.
+        </div>
+      </div>
+      <div class="faq">
+        <button class="faq-q" id="fq4" aria-expanded="false" aria-controls="fa4">
+          <span>Есть бухгалтер — зачем финдир?</span><i aria-hidden="true">+</i>
+        </button>
+        <div class="faq-a" id="fa4">
+          Бухгалтер считает прошлое для государства, финдир управляет будущим для вас.
+          Мы усиливаем бухгалтера, а не заменяем: он закрывает налоги, мы — прибыль и рост.
+        </div>
+      </div>
+      <div class="faq">
+        <button class="faq-q" id="fq5" aria-expanded="false" aria-controls="fa5">
+          <span>Аутсорс хуже штатного финдира?</span><i aria-hidden="true">+</i>
+        </button>
+        <div class="faq-a" id="fa5">
+          Вы получаете команду с опытом десятков компаний вместо одного человека —
+          без рисков найма, выгорания и ухода в самый важный момент.
+          И за <span class="ph">[X]</span>× меньше оклада штатного.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== ФИНАЛ ====== -->
+<section class="final" id="final">
+  <div class="wrap narrow">
+    <span class="scar reveal" data-rv="scale">
+      ⏳ Осталось <span class="ph">[N]</span> бесплатных разборов в этом месяце
+    </span>
+    <h2 class="reveal" data-rv="up">
+      Перестаньте управлять<br><em>вслепую</em>
+    </h2>
+    <p class="reveal" data-rv="up"
+      style="color:var(--cream-dim);max-width:460px;margin:0 auto 30px">
+      Оставьте контакт — вернёмся в течение <span class="ph">[N]</span> часов
+      и назначим бесплатный разбор.
+    </p>
+
+    <div class="form-wrap reveal" data-rv="scale">
+      <form id="fields" onsubmit="submitForm();return false;" novalidate>
+        <input id="fName" placeholder="Ваше имя" autocomplete="given-name"
+          aria-label="Ваше имя" required>
+        <input id="fPhone" type="tel" placeholder="Телефон" autocomplete="tel"
+          aria-label="Телефон" required>
+        <input id="fBiz" placeholder="Сфера бизнеса (необязательно)"
+          autocomplete="organization" aria-label="Сфера бизнеса">
+        <button class="btn" style="width:100%" type="submit">
+          Получить бесплатный разбор
+        </button>
+        <p class="micro">30 минут · без обязательств · данные под защитой</p>
+      </form>
+      <div class="thanks" id="thanks" aria-live="polite">
+        <div style="font-size:46px" aria-hidden="true">✦</div>
+        <b class="serif" style="font-size:23px;display:block;margin:8px 0">Заявка принята</b>
+        <p style="color:var(--cream-dim);margin-bottom:20px">
+          Продолжим в Telegram — там быстрее всего.
+        </p>
+        <a href="[ССЫЛКА_БОТА]" class="btn ph" style="width:100%" id="tg"
+          target="_blank" rel="noopener">
+          Перейти в Telegram · <span class="ph">[ССЫЛКА_БОТА]</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="contacts">
+      <span class="ph">[телефон]</span> ·
+      <a href="#" class="ph">[Telegram]</a> ·
+      <a href="#" class="ph">[email]</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span class="ph">[Название компании]</span> · Финансовый директор на аутсорсе ·
+  <span class="ph">[год]</span>
+</footer>
+
+<!-- МОДАЛЬНОЕ ОКНО КЕЙСА -->
+<div class="modal" id="modal" role="dialog" aria-modal="true"
+  aria-labelledby="mTitle" aria-hidden="true">
+  <div class="modal-box">
+    <button class="modal-x" id="modalClose" aria-label="Закрыть">✕</button>
+    <div class="case-tag" id="mTag"></div>
+    <h3 class="serif" id="mTitle"></h3>
+    <div class="ba">
+      <div class="was"><small>Было</small><b id="mWas"></b></div>
+      <div class="now"><small>Стало</small><b id="mNow"></b></div>
+    </div>
+    <p id="mText" style="color:var(--muted)"></p>
+  </div>
+</div>
+
+<script>
+/* прогресс-бар */
+const prog = document.getElementById('prog');
+addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = Math.round(h.scrollTop / (h.scrollHeight - h.clientHeight) * 100);
+  prog.style.width = pct + '%';
+  prog.setAttribute('aria-valuenow', pct);
+}, {passive: true});
+
+/* ---- эффект печати в hero ---- */
+const phrases = ['ваши деньги?', 'ваша прибыль?', 'ваш оборот?'];
+const typeEl = document.getElementById('type');
+let pi = 0, ci = 0, del = false;
+(function tick() {
+  const w = phrases[pi];
+  typeEl.textContent = del ? w.slice(0, ci--) : w.slice(0, ci++);
+  if (!del && ci === w.length + 1) { del = true; setTimeout(tick, 1700); return; }
+  if (del && ci === 0) { del = false; pi = (pi + 1) % phrases.length; }
+  setTimeout(tick, del ? 42 : 88);
+})();
+
+/* ---- reveal секций (4 направления, циклом) ---- */
+const revealIO = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('in');
+      revealIO.unobserve(entry.target);
+    }
+  });
+}, {threshold: .15});
+
+const rvOrder = ['up', 'left', 'right', 'scale', 'up', 'right', 'left', 'scale'];
+document.querySelectorAll('.reveal').forEach((el, i) => {
+  if (!el.dataset.rv) el.dataset.rv = rvOrder[i % 8];
+  revealIO.observe(el);
+});
+
+/* ================================================================
+   ЯДРО: единый стейт found → заливка тарифов → перевес цены
+   found/мес = оборот_руб × Σ(data-rate выбранных утечек)  — оценочно
+   Заливка = foundГод / tierYearPrice × 100%, до 100%
+   Покрыт → цена зачёркнута + «чистыми +X ₽/год» + «окупается за N дн.»
+   Демо-цены в data-price (₽/мес) — заменить на реальные
+   ================================================================ */
+const leaks = [...document.querySelectorAll('.leak')];
+const turnoverEl = document.getElementById('turnover');
+const toValEl = document.getElementById('toVal');
+const foundEl = document.getElementById('found');
+const foundYEl = document.getElementById('foundYear');
+const tiers = [...document.querySelectorAll('.tier')];
+let shownMonth = 0;
+
+const fmt = n => Math.round(n).toLocaleString('ru-RU') + ' ₽';
+
+function toggleLeak(el) {
+  const on = el.classList.toggle('on');
+  el.setAttribute('aria-checked', on ? 'true' : 'false');
+  recalc();
+}
+
+leaks.forEach(l => {
+  l.addEventListener('click', () => toggleLeak(l));
+  l.addEventListener('keydown', e => {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleLeak(l); }
+  });
+});
+turnoverEl.addEventListener('input', recalc);
+
+function recalc() {
+  const mln = +turnoverEl.value;
+  toValEl.textContent = mln + ' млн ₽';
+  turnoverEl.setAttribute('aria-valuenow', mln);
+
+  const rate = leaks.filter(l => l.classList.contains('on'))
+    .reduce((s, l) => s + +l.dataset.rate, 0);
+
+  /* оценочно: потери/мес = оборот × суммарный коэффициент */
+  const month = mln * 1e6 * rate;
+  const year = month * 12;
+
+  roll(shownMonth, month);
+  shownMonth = month;
+  foundYEl.textContent = fmt(year);
+
+  foundEl.classList.add('bump');
+  setTimeout(() => foundEl.classList.remove('bump'), 150);
+
+  /* показываем/скрываем подсказку zero-state */
+  const hint = document.getElementById('vaultHint');
+  if (hint) hint.classList.toggle('hidden', rate > 0);
+
+  tiers.forEach(tier => {
+    const priceM = +tier.dataset.price;
+    const priceY = priceM * 12;
+    const pct = Math.min(100, year / priceY * 100);
+    tier.querySelector('.fill').style.height = pct + '%';
+
+    const netEl = tier.querySelector('[data-net]');
+    const payEl = tier.querySelector('[data-pay]');
+
+    if (year >= priceY && month > 0) {
+      tier.classList.add('covered');
+      netEl.textContent = 'чистыми +' + fmt(year - priceY) + '/год';
+      const days = Math.max(1, Math.round(priceM / (month / 30)));
+      payEl.textContent = 'окупается за ' + days + ' дн.';
+    } else {
+      tier.classList.remove('covered');
+      netEl.textContent = '';
+      payEl.textContent = '';
+    }
+  });
+}
+
+/* плавный одометр */
+function roll(from, to) {
+  if (from === to) { foundEl.textContent = fmt(to); return; }
+  const t0 = performance.now(), dur = 550;
+  (function step(t) {
+    const p = Math.min((t - t0) / dur, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    foundEl.textContent = fmt(from + (to - from) * ease);
+    if (p < 1) requestAnimationFrame(step);
+  })(t0);
+}
+
+/* ---- видео facade ---- */
+const videoWrap = document.getElementById('videoWrap');
+let videoLoaded = false;
+function loadVideo() {
+  if (videoLoaded) return;
+  videoLoaded = true;
+  /* TODO: заменить [ССЫЛКА_НА_ВИДЕО] на реальный embed-URL */
+  videoWrap.innerHTML = '<iframe src="[ССЫЛКА_НА_ВИДЕО]" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="Видео о работе финансового директора"></iframe>';
+  /* убираем интерактивные атрибуты с обёртки после загрузки iframe */
+  videoWrap.removeAttribute('role');
+  videoWrap.removeAttribute('tabindex');
+  videoWrap.removeAttribute('aria-label');
+}
+videoWrap.addEventListener('click', loadVideo);
+videoWrap.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); loadVideo(); }
+});
+
+/* ---- кейсы + модалка ---- */
+const casesData = [
+  {
+    tag: '[Оптовая торговля]',
+    title: 'Кассовый разрыв найден за 2 месяца до',
+    was: 'Хаос в платежах',
+    now: 'Платёжный календарь',
+    text: 'Построили платёжный календарь — разрыв стал виден заранее, успели передоговориться с поставщиками без штрафов. [реальные цифры клиента]'
+  },
+  {
+    tag: '[Производство]',
+    title: 'Скрытое убыточное направление',
+    was: '«Всё прибыльно»',
+    now: '+[X]% прибыли',
+    text: 'Юнит-экономика показала, что одно направление съедало прибыль остальных. Закрыли — маржа выросла. [реальные цифры клиента]'
+  },
+  {
+    tag: '[Розница / Торговля]',
+    title: 'Деньги, замороженные в складе',
+    was: 'Зависшие остатки',
+    now: 'Высвобождено [X] ₽',
+    text: 'Навели учёт оборачиваемости, вернули замороженные деньги в оборот. [реальные цифры клиента]'
+  }
+];
+
+const modal = document.getElementById('modal');
+const modalClose = document.getElementById('modalClose');
+let lastFocused = null;
+
+function openModal(idx) {
+  const d = casesData[idx];
+  document.getElementById('mTag').textContent = d.tag;
+  document.getElementById('mTitle').textContent = d.title;
+  document.getElementById('mWas').textContent = d.was;
+  document.getElementById('mNow').textContent = d.now;
+  document.getElementById('mText').textContent = d.text;
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  lastFocused = document.activeElement;
+  modalClose.focus();
+}
+
+function closeModal() {
+  if (!modal.classList.contains('open')) return;
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  if (lastFocused) lastFocused.focus();
+}
+
+/* focus trap внутри модального окна */
+modal.addEventListener('keydown', e => {
+  if (!modal.classList.contains('open')) return;
+  if (e.key !== 'Tab') return;
+  const focusable = [...modal.querySelectorAll(
+    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  )].filter(el => !el.disabled);
+  if (!focusable.length) return;
+  const first = focusable[0], last = focusable[focusable.length - 1];
+  if (e.shiftKey) {
+    if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+  } else {
+    if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+});
+
+document.querySelectorAll('.case').forEach(c => {
+  c.addEventListener('click', () => openModal(+c.dataset.case));
+  c.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(+c.dataset.case); }
+  });
+});
+modalClose.addEventListener('click', closeModal);
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ---- FAQ аккордеон ---- */
+document.querySelectorAll('.faq-q').forEach(q => {
+  q.addEventListener('click', () => {
+    const isOpen = q.parentElement.classList.toggle('open');
+    q.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+});
+
+/* ---- форма ---- */
+function submitForm() {
+  const nameEl = document.getElementById('fName');
+  const phoneEl = document.getElementById('fPhone');
+  nameEl.classList.remove('err');
+  phoneEl.classList.remove('err');
+  let valid = true;
+  if (!nameEl.value.trim()) { nameEl.classList.add('err'); nameEl.focus(); valid = false; }
+  if (!phoneEl.value.trim()) { phoneEl.classList.add('err'); if (valid) phoneEl.focus(); valid = false; }
+  if (!valid) return;
+
+  const data = {
+    name: nameEl.value.trim(),
+    phone: phoneEl.value.trim(),
+    biz: document.getElementById('fBiz').value.trim()
+  };
+  console.log('Заявка:', data);
+  /* TODO: отправка в Telegram-бот / CRM */
+
+  document.getElementById('fields').style.display = 'none';
+  document.getElementById('thanks').classList.add('show');
+}
+
+/* ================================================================
+   БОТ-ГИД
+   Логика: спящий → пробуждение тайной искрой → ведёт с эмоциями
+   (указывает/думает/радуется) → топает у CTA → машет и прячется
+   на финале → возвращается при скролле обратно.
+   ================================================================ */
+(function initGuide() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const guide = document.getElementById('guide');
+  const bubble = document.getElementById('gBubble');
+  const wakerEl = document.getElementById('waker');
+
+  /* сценарий: [say, emo, pos%, hide?] для каждой section */
+  const script = [
+    {say: 'Привет! Я твой финансовый гид 👋', emo: 'e-wave', pos: 52},
+    {say: 'Деньги утекают тихо… вчитайся', emo: 'e-think', pos: 24},
+    {say: 'Подвигай слайдер — оживёт! 👇', emo: 'e-point', pos: 72},
+    {say: 'Чувствуешь разницу? 🤔', emo: 'e-think', pos: 28},
+    {say: 'Вот что у тебя появится 🎯', emo: 'e-happy', pos: 64},
+    {say: 'Жми play — всего 90 сек 👇', emo: 'e-point', pos: 38},
+    {say: 'Всего четыре шага', emo: 'e-happy', pos: 26},
+    {say: 'Реальные цифры клиентов', emo: 'e-happy', pos: 70},
+    {say: 'Сомнения? Тут ответы 💡', emo: 'e-think', pos: 34},
+    {say: 'Дальше сам. Удачи! 👋', emo: 'e-wave', pos: 56, hide: true}
+  ];
+
+  const sections = [...document.querySelectorAll('section')];
+  let active = -1, awake = false;
+  let bubbleHideTimer = null;
+
+  const EMOTIONS = ['e-point', 'e-think', 'e-happy', 'e-stomp', 'e-wave'];
+
+  function clearEmotions() {
+    EMOTIONS.forEach(e => guide.classList.remove(e));
+  }
+
+  function showBubble(text, persistent) {
+    bubble.textContent = text;
+    guide.classList.add('show-bubble');
+    clearTimeout(bubbleHideTimer);
+    if (!persistent) {
+      bubbleHideTimer = setTimeout(() => {
+        if (!guide.classList.contains('e-stomp')) guide.classList.remove('show-bubble');
+      }, 4000);
+    }
+  }
+
+  function go(i) {
+    if (!awake || i === active || !script[i]) return;
+    active = i;
+    const s = script[i];
+
+    guide.classList.remove('gone');
+    guide.classList.add('walking');
+    clearEmotions();
+    guide.classList.toggle('flip', s.pos > 55);
+    guide.style.left = s.pos + '%';
+    showBubble(s.say, false);
+
+    clearTimeout(guide._walkT);
+    guide._walkT = setTimeout(() => {
+      guide.classList.remove('walking');
+      guide.classList.add(s.emo);
+      if (s.hide) {
+        /* финал: машет → прячется → при скролле вернётся */
+        setTimeout(() => {
+          guide.classList.add('gone');
+          guide.classList.remove('show-bubble');
+        }, 3200);
+      }
+    }, 650);
+  }
+
+  /* CTA-топот: когда CTA-кнопки в видимости — подъехать и топать */
+  const ctaButtons = document.querySelectorAll('.btn');
+  let stompActive = false;
+  const ctaIO = new IntersectionObserver(entries => {
+    if (!awake) return;
+    const visible = entries.some(e => e.isIntersecting);
+    if (visible && !stompActive && !guide.classList.contains('gone')) {
+      stompActive = true;
+      /* немного сдвигаемся к ближайшей кнопке */
+      const btn = [...ctaButtons].find(b => {
+        const r = b.getBoundingClientRect();
+        return r.top > 0 && r.top < window.innerHeight;
+      });
+      if (btn) {
+        const bRect = btn.getBoundingClientRect();
+        const pct = Math.round((bRect.left + bRect.width / 2) / window.innerWidth * 100);
+        guide.style.left = Math.max(8, Math.min(92, pct)) + '%';
+        guide.classList.toggle('flip', pct > 55);
+      }
+      clearEmotions();
+      guide.classList.add('e-stomp');
+      showBubble('Жми сюда! 👇', true);
+    } else if (!visible) {
+      stompActive = false;
+      if (guide.classList.contains('e-stomp')) {
+        clearEmotions();
+        guide.classList.remove('show-bubble');
+      }
+    }
+  }, {threshold: .5});
+  ctaButtons.forEach(b => ctaIO.observe(b));
+
+  /* пробуждение */
+  function wake() {
+    if (awake) return;
+    awake = true;
+    guide.classList.remove('asleep');
+    wakerEl.style.display = 'none';
+    active = -1;
+    setTimeout(() => go(0), 300);
+  }
+  wakerEl.addEventListener('click', wake);
+  wakerEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wake(); }
+  });
+
+  /* IntersectionObserver на секции */
+  const sectionIO = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting || !awake) return;
+      const idx = sections.indexOf(entry.target);
+      /* если были в конце и скроллим обратно — оживить */
+      if (guide.classList.contains('gone')) {
+        guide.classList.remove('gone');
+        clearEmotions();
+      }
+      go(idx);
+    });
+  }, {threshold: .45});
+  sections.forEach(s => sectionIO.observe(s));
+
+  /* прятать бабл при простое */
+  addEventListener('scroll', () => {
+    if (!awake) return;
+    if (!guide.classList.contains('e-stomp')) {
+      guide.classList.add('show-bubble');
+      clearTimeout(bubbleHideTimer);
+      bubbleHideTimer = setTimeout(() => {
+        if (!guide.classList.contains('e-stomp')) guide.classList.remove('show-bubble');
+      }, 2600);
+    }
+  }, {passive: true});
+})();
+
+/* инициализация калькулятора — вызывается последней */
+recalc();
+</script>
+</body>
 </html>
